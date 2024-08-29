@@ -19,6 +19,7 @@ package collector
 import (
 	"bytes"
 	"encoding/binary"
+	"log/slog"
 	"syscall"
 	"testing"
 

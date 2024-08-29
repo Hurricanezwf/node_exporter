@@ -17,13 +17,13 @@
 package collector
 
 import (
+	"log/slog"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

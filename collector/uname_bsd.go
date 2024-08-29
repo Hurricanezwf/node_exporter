@@ -18,6 +18,7 @@
 package collector
 
 import (
+	"log/slog"
 	"strings"
 
 	"golang.org/x/sys/unix"

@@ -14,6 +14,7 @@
 package collector
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/alecthomas/kingpin/v2"

@@ -19,6 +19,7 @@ package collector
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -26,7 +27,6 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/safchain/ethtool"
@@ -49,7 +49,7 @@ func (c testEthtoolCollector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func NewTestEthtoolCollector(logger log.Logger) (prometheus.Collector, error) {
+func NewTestEthtoolCollector(logger slog.Logger) (prometheus.Collector, error) {
 	dsc, err := NewEthtoolTestCollector(logger)
 	if err != nil {
 		return testEthtoolCollector{}, err
@@ -255,7 +255,7 @@ func (e *EthtoolFixture) LinkInfo(intf string) (ethtool.EthtoolCmd, error) {
 	return res, err
 }
 
-func NewEthtoolTestCollector(logger log.Logger) (Collector, error) {
+func NewEthtoolTestCollector(logger slog.Logger) (Collector, error) {
 	collector, err := makeEthtoolCollector(logger)
 	if err != nil {
 		return nil, err

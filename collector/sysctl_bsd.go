@@ -19,6 +19,7 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"unsafe"
 
 	"github.com/prometheus/client_golang/prometheus"

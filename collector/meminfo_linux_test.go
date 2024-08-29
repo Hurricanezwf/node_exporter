@@ -17,10 +17,9 @@
 package collector
 
 import (
+	"log/slog"
 	"os"
 	"testing"
-
-	"github.com/go-kit/log"
 )
 
 func TestMemInfo(t *testing.T) {

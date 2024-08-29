@@ -19,9 +19,8 @@ package collector
 
 import (
 	"errors"
+	"log/slog"
 	"unsafe"
-
-	"github.com/go-kit/log/level"
 )
 
 /*
@@ -51,14 +50,14 @@ func (c *filesystemCollector) GetStats() (stats []filesystemStats, err error) {
 	for i := 0; i < int(count); i++ {
 		mountpoint := C.GoString(&mnt[i].f_mntonname[0])
 		if c.excludedMountPointsPattern.MatchString(mountpoint) {
-			level.Debug(c.logger).Log("msg", "Ignoring mount point", "mountpoint", mountpoint)
+			c.logger.Debug("Ignoring mount point", "mountpoint", mountpoint)
 			continue
 		}
 
 		device := C.GoString(&mnt[i].f_mntfromname[0])
 		fstype := C.GoString(&mnt[i].f_fstypename[0])
 		if c.excludedFSTypesPattern.MatchString(fstype) {
-			level.Debug(c.logger).Log("msg", "Ignoring fs type", "type", fstype)
+			c.logger.Debug("Ignoring fs type", "type", fstype)
 			continue
 		}
 

@@ -18,6 +18,7 @@
 package collector
 
 import (
+	"log/slog"
 	"unsafe"
 
 	"golang.org/x/sys/unix"

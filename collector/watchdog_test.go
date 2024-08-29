@@ -18,11 +18,11 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )

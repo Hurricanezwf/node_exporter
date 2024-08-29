@@ -17,6 +17,7 @@
 package collector
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/godbus/dbus/v5"

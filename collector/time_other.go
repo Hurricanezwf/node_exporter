@@ -18,6 +18,7 @@ package collector
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"log/slog"
 )
 
 func (c *timeCollector) update(ch chan<- prometheus.Metric) error {

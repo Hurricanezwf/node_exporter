@@ -14,12 +14,11 @@
 package collector
 
 import (
+	"log/slog"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/go-kit/log"
 )
 
 const debianBullseye string = `PRETTY_NAME="Debian GNU/Linux 11 (bullseye)"

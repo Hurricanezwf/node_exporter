@@ -18,11 +18,11 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 )
@@ -39,7 +39,7 @@ func (c testDiskStatsCollector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func NewTestDiskStatsCollector(logger log.Logger) (prometheus.Collector, error) {
+func NewTestDiskStatsCollector(logger slog.Logger) (prometheus.Collector, error) {
 	dsc, err := NewDiskstatsCollector(logger)
 	if err != nil {
 		return testDiskStatsCollector{}, err

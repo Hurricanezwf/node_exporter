@@ -17,11 +17,11 @@
 package collector
 
 import (
+	"log/slog"
 	"strings"
 	"testing"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log"
 )
 
 func Test_parseFilesystemLabelsError(t *testing.T) {

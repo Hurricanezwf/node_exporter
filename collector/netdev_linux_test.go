@@ -17,9 +17,8 @@
 package collector
 
 import (
+	"log/slog"
 	"testing"
-
-	"github.com/go-kit/log"
 
 	"github.com/jsimonetti/rtnetlink"
 )

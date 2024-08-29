@@ -17,10 +17,10 @@
 package collector
 
 import (
+	"log/slog"
 	"reflect"
 	"testing"
 
-	"github.com/go-kit/log"
 	"github.com/prometheus/procfs"
 )
 

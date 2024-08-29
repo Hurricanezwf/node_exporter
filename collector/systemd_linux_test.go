@@ -17,11 +17,11 @@
 package collector
 
 import (
+	"log/slog"
 	"regexp"
 	"testing"
 
 	"github.com/coreos/go-systemd/v22/dbus"
-	"github.com/go-kit/log"
 )
 
 // Creates mock UnitLists

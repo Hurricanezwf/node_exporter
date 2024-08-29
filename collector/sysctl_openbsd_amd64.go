@@ -15,6 +15,7 @@ package collector
 
 import (
 	"golang.org/x/sys/unix"
+	"log/slog"
 	"syscall"
 	"unsafe"
 )

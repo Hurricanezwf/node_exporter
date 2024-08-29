@@ -183,6 +183,7 @@ import "C"
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"

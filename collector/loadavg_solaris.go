@@ -18,6 +18,7 @@ package collector
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 
 	"github.com/illumos/go-kstat"
