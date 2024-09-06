@@ -25,9 +25,10 @@ require (
 	github.com/prometheus/common v0.37.0
 	github.com/prometheus/exporter-toolkit v0.8.2
 	github.com/prometheus/procfs v0.8.0
-	github.com/safchain/ethtool v0.2.0
+	github.com/safchain/ethtool v0.4.1
 	github.com/soundcloud/go-runit v0.0.0-20150630195641-06ad41a06c4a
-	golang.org/x/sys v0.2.0
+	github.com/tidwall/gjson v1.17.3
+	golang.org/x/sys v0.21.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
@@ -48,6 +49,8 @@ require (
 	github.com/mdlayher/socket v0.4.0 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
 	github.com/siebenmann/go-kstat v0.0.0-20210513183136-173c9b0a9973 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect

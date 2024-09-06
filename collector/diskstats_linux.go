@@ -26,6 +26,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/node_exporter/hurricanezwf"
 	"github.com/prometheus/procfs/blockdevice"
 )
 
@@ -275,85 +276,121 @@ func (c *diskstatsCollector) Update(ch chan<- prometheus.Metric) error {
 		return fmt.Errorf("couldn't get diskstats: %w", err)
 	}
 
+	// Note: ADD BY ZWF;
+	// 读取 /proc/mounts 文件内容;
+	diskMounts, err := hurricanezwf.DiskMounts()
+	if err != nil {
+		// 错误降级;	
+		c.logger.Log("error:", fmt.Sprintf("failed to read disk mount data, %v", err))
+	}
+	if diskMounts == nil {
+		diskMounts = make(map[string]hurricanezwf.DiskMount)
+	}
+
 	for _, stats := range diskStats {
-		dev := stats.DeviceName
-		if c.deviceFilter.ignored(dev) {
+		devName := stats.DeviceName
+		if c.deviceFilter.ignored(devName) {
 			continue
 		}
 
-		info, err := getUdevDeviceProperties(stats.MajorNumber, stats.MinorNumber)
-		if err != nil {
-			level.Debug(c.logger).Log("msg", "Failed to parse udev info", "err", err)
-		}
-
-		ch <- c.infoDesc.mustNewConstMetric(1.0, dev,
-			fmt.Sprint(stats.MajorNumber),
-			fmt.Sprint(stats.MinorNumber),
-			info[udevIDPath],
-			info[udevIDWWN],
-			info[udevIDModel],
-			info[udevIDSerialShort],
-			info[udevIDRevision],
-		)
-
-		statCount := stats.IoStatsCount - 3 // Total diskstats record count, less MajorNumber, MinorNumber and DeviceName
-
-		for i, val := range []float64{
-			float64(stats.ReadIOs),
-			float64(stats.ReadMerges),
-			float64(stats.ReadSectors) * unixSectorSize,
-			float64(stats.ReadTicks) * secondsPerTick,
-			float64(stats.WriteIOs),
-			float64(stats.WriteMerges),
-			float64(stats.WriteSectors) * unixSectorSize,
-			float64(stats.WriteTicks) * secondsPerTick,
-			float64(stats.IOsInProgress),
-			float64(stats.IOsTotalTicks) * secondsPerTick,
-			float64(stats.WeightedIOTicks) * secondsPerTick,
-			float64(stats.DiscardIOs),
-			float64(stats.DiscardMerges),
-			float64(stats.DiscardSectors),
-			float64(stats.DiscardTicks) * secondsPerTick,
-			float64(stats.FlushRequestsCompleted),
-			float64(stats.TimeSpentFlushing) * secondsPerTick,
-		} {
-			if i >= statCount {
-				break
-			}
-			ch <- c.descs[i].mustNewConstMetric(val, dev)
-		}
-
-		if fsType := info[udevIDFSType]; fsType != "" {
-			ch <- c.filesystemInfoDesc.mustNewConstMetric(1.0, dev,
-				fsType,
-				info[udevIDFSUsage],
-				info[udevIDFSUUID],
-				info[udevIDFSVersion],
-			)
-		}
-
-		if name := info[udevDMName]; name != "" {
-			ch <- c.deviceMapperInfoDesc.mustNewConstMetric(1.0, dev,
-				name,
-				info[udevDMUUID],
-				info[udevDMVGName],
-				info[udevDMLVName],
-				info[udevDMLVLayer],
-			)
-		}
-
-		if ata := info[udevIDATA]; ata != "" {
-			for attr, desc := range c.ataDescs {
-				str, ok := info[attr]
-				if !ok {
-					level.Debug(c.logger).Log("msg", "Udev attribute does not exist", "attribute", attr)
-					continue
+		// Note: ADD BY ZWF;
+		devList := []string{devName}
+		// 识别当前是否是运行的云原生环境, 如果是则默认开启该功能;
+		if _, err := os.Stat("/var/run/secrets/kubernetes.io/serviceaccount"); err == nil {
+			// TODO: fix kube reader;
+			// decode pod & container info from disk mount path;
+			podInfoList, err := hurricanezwf.TryDecodePodInfoForDevice(c.logger, diskMounts, devName, nil)
+			if err == nil {
+				for _, podInfo := range podInfoList {
+					for containerName, containerInfo := range podInfo.PodContainers {
+						for pvc, _ := range containerInfo.PVCNames {
+							devList = append(devList, fmt.Sprintf("ns:%s,pod:%s,pvc:%s,container:%s", podInfo.PodNamespace, podInfo.PodName, pvc, containerName))
+						}
+						for emptydir, _ := range containerInfo.EmptyDirNames {
+							devList = append(devList, fmt.Sprintf("ns:%s,pod:%s,emptydir:%s,container:%s", podInfo.PodNamespace, podInfo.PodName, emptydir, containerName))
+						}
+					}
 				}
+			} else {
+				c.logger.Log("error:", fmt.Sprintf("failed to decode pod info with device %s, %v", dev, err))
+			}
+		}
 
-				if value, err := strconv.ParseFloat(str, 64); err == nil {
-					ch <- desc.mustNewConstMetric(value, dev)
-				} else {
-					level.Error(c.logger).Log("msg", "Failed to parse ATA value", "err", err)
+		for _, dev := range devList {
+			info, err := getUdevDeviceProperties(stats.MajorNumber, stats.MinorNumber)
+			if err != nil {
+				level.Debug(c.logger).Log("msg", "Failed to parse udev info", "err", err)
+			}
+
+			ch <- c.infoDesc.mustNewConstMetric(1.0, dev,
+				fmt.Sprint(stats.MajorNumber),
+				fmt.Sprint(stats.MinorNumber),
+				info[udevIDPath],
+				info[udevIDWWN],
+				info[udevIDModel],
+				info[udevIDSerialShort],
+				info[udevIDRevision],
+			)
+
+			statCount := stats.IoStatsCount - 3 // Total diskstats record count, less MajorNumber, MinorNumber and DeviceName
+
+			for i, val := range []float64{
+				float64(stats.ReadIOs),
+				float64(stats.ReadMerges),
+				float64(stats.ReadSectors) * unixSectorSize,
+				float64(stats.ReadTicks) * secondsPerTick,
+				float64(stats.WriteIOs),
+				float64(stats.WriteMerges),
+				float64(stats.WriteSectors) * unixSectorSize,
+				float64(stats.WriteTicks) * secondsPerTick,
+				float64(stats.IOsInProgress),
+				float64(stats.IOsTotalTicks) * secondsPerTick,
+				float64(stats.WeightedIOTicks) * secondsPerTick,
+				float64(stats.DiscardIOs),
+				float64(stats.DiscardMerges),
+				float64(stats.DiscardSectors),
+				float64(stats.DiscardTicks) * secondsPerTick,
+				float64(stats.FlushRequestsCompleted),
+				float64(stats.TimeSpentFlushing) * secondsPerTick,
+			} {
+				if i >= statCount {
+					break
+				}
+				ch <- c.descs[i].mustNewConstMetric(val, dev)
+			}
+
+			if fsType := info[udevIDFSType]; fsType != "" {
+				ch <- c.filesystemInfoDesc.mustNewConstMetric(1.0, dev,
+					fsType,
+					info[udevIDFSUsage],
+					info[udevIDFSUUID],
+					info[udevIDFSVersion],
+				)
+			}
+
+			if name := info[udevDMName]; name != "" {
+				ch <- c.deviceMapperInfoDesc.mustNewConstMetric(1.0, dev,
+					name,
+					info[udevDMUUID],
+					info[udevDMVGName],
+					info[udevDMLVName],
+					info[udevDMLVLayer],
+				)
+			}
+
+			if ata := info[udevIDATA]; ata != "" {
+				for attr, desc := range c.ataDescs {
+					str, ok := info[attr]
+					if !ok {
+						level.Debug(c.logger).Log("msg", "Udev attribute does not exist", "attribute", attr)
+						continue
+					}
+
+					if value, err := strconv.ParseFloat(str, 64); err == nil {
+						ch <- desc.mustNewConstMetric(value, dev)
+					} else {
+						level.Error(c.logger).Log("msg", "Failed to parse ATA value", "err", err)
+					}
 				}
 			}
 		}
